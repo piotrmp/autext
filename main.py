@@ -1,16 +1,30 @@
-# This is a sample Python script.
+import torch, pathlib
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+from perplexity import Perplexity
 
+# Based on https://huggingface.co/docs/transformers/perplexity
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+# TODO generalise to other devices
+device = torch.device("mps")
+local_device = torch.device('cpu')
 
+perp = Perplexity(device, local_device)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+gen_ppls = []
+hum_ppls = []
+path = pathlib.Path.home() / 'Downloads' / 'train.tsv'
+for line in open(path):
+    parts = line.strip().split('\t')
+    sentence = parts[1]
+    if sentence == 'text':
+        continue
+    ppl = perp.perplexity(sentence)
+    if parts[2] == 'generated':
+        gen_ppls.append(ppl)
+    elif parts[2] == 'human':
+        hum_ppls.append(ppl)
+    if len(gen_ppls) + len(hum_ppls) > 1000:
+        break
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+print(sum(gen_ppls) / len(gen_ppls))
+print(sum(hum_ppls) / len(hum_ppls))
