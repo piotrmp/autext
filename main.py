@@ -1,4 +1,5 @@
-import torch, pathlib
+import torch, pathlib, numpy
+from matplotlib import pyplot
 
 from perplexity import Perplexity
 
@@ -13,7 +14,7 @@ perp = Perplexity(device, local_device)
 gen_ppls = []
 hum_ppls = []
 path = pathlib.Path.home() / 'Downloads' / 'train.tsv'
-for line in open(path):
+for i, line in enumerate(open(path)):
     parts = line.strip().split('\t')
     sentence = parts[1]
     if sentence == 'text':
@@ -23,8 +24,13 @@ for line in open(path):
         gen_ppls.append(ppl)
     elif parts[2] == 'human':
         hum_ppls.append(ppl)
-    if len(gen_ppls) + len(hum_ppls) > 1000:
+    if i > 1000:
         break
+    else:
+        print(i)
 
-print(sum(gen_ppls) / len(gen_ppls))
-print(sum(hum_ppls) / len(hum_ppls))
+bins = numpy.linspace(0, 200, 200)
+pyplot.hist(gen_ppls, bins, alpha=0.5, label='Automatic')
+pyplot.hist(hum_ppls, bins, alpha=0.5, label='Human')
+pyplot.legend(loc='upper right')
+pyplot.show()
