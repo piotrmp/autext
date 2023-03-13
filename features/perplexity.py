@@ -40,6 +40,8 @@ class Perplexity(FeatureGenerator):
                 for i in range(shift_logits.shape[0]):
                     loss = celoss(shift_logits[i], shift_labels[i]).to(self.local_device).numpy()
                     loss = float(loss)
+                    if not np.isfinite(loss):
+                        loss = 0.0
                     results[counter].append(np.exp(loss))
                     counter = counter + 1
                 progress_bar.update(1)
