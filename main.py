@@ -38,7 +38,7 @@ test_Y= np.array(test_Y)
 print("Loaded data with "+str(len(train_Y))+" training instances and "+str(len(test_Y))+" test instances.")
 
 # Preparing feature generators
-device = torch.device("cpu")
+device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 local_device = torch.device('cpu')
 
 perp = Perplexity(device, local_device)
