@@ -1,38 +1,46 @@
+from torch.nn import CrossEntropyLoss
 from transformers import GPT2LMHeadModel, GPT2TokenizerFast
 import torch
 import numpy as np
 
 from features.feature_generator import FeatureGenerator
+from tqdm.auto import tqdm
 
-# TODO generalise to load other models
-model_id = "gpt2"
 fixed_len = 1024
+BATCH_SIZE = 16
 
 
 class Perplexity(FeatureGenerator):
     def __init__(self, device, local_device):
-        self.model = GPT2LMHeadModel.from_pretrained(model_id).to(device)
-        self.tokenizer = GPT2TokenizerFast.from_pretrained(model_id)
-        self.tokenizer.add_special_tokens({'pad_token': '[PAD]'})
         self.device = device
         self.local_device = local_device
-        max_length = self.model.config.n_positions
-        assert (max_length >= fixed_len)
-    
-    def perplexity(self, sentence):
-        # TODO make it process several sentences at a time
-        encodings = self.tokenizer(sentence, truncation=True, max_length=fixed_len, return_tensors="pt")
-        
-        input_ids = encodings.input_ids.to(self.device)
-        target_ids = input_ids.clone()
-        with torch.no_grad():
-            # TODO obtain per-token probs rather than total loss by using logits
-            outputs = self.model(input_ids, labels=target_ids)
-            neg_log_likelihood = outputs.loss.to(self.local_device)
-        ppl = float(torch.exp(neg_log_likelihood).numpy())
-        if not np.isfinite(ppl):
-            ppl=0
-        return ppl
     
     def features(self, sentences):
-        return [[self.perplexity(sentence)] for sentence in sentences]
+        results = [[] for sentence in sentences]
+        for model_id in ["distilgpt2", "gpt2", "gpt2-medium"]:
+            print("Computing perplexity using "+model_id)
+            model = GPT2LMHeadModel.from_pretrained(model_id)
+            tokenizer = GPT2TokenizerFast.from_pretrained(model_id)
+            tokenizer.pad_token = tokenizer.eos_token
+            model.to(self.device)
+            celoss = CrossEntropyLoss(ignore_index=tokenizer.encode(tokenizer.eos_token)[0])
+            counter = 0
+            batches = [sentences[i:i + BATCH_SIZE] for i in range(0, len(sentences), BATCH_SIZE)]
+            progress_bar = tqdm(range(len(batches)), ascii=True)
+            for batch in batches:
+                encodings = tokenizer(batch, padding=True, truncation=True, max_length=fixed_len, return_tensors="pt")
+                encodings = {k: v.to(self.device) for k, v in encodings.items()}
+                target_ids = encodings['input_ids'].clone()
+                with torch.no_grad():
+                    outputs = model(encodings['input_ids'], attention_mask=encodings['attention_mask'],
+                                    labels=target_ids)
+                logits = outputs['logits']
+                shift_logits = logits[..., :-1, :]
+                shift_labels = target_ids[..., 1:]
+                for i in range(shift_logits.shape[0]):
+                    loss = celoss(shift_logits[i], shift_labels[i]).to(self.local_device).numpy()
+                    loss = float(loss)
+                    results[counter].append(np.exp(loss))
+                    counter = counter + 1
+                progress_bar.update(1)
+        return results
