@@ -17,7 +17,7 @@ class Perplexity(FeatureGenerator):
     
     def features(self, sentences):
         results = [[] for sentence in sentences]
-        for model_id in ["distilgpt2", "gpt2", "gpt2-medium"]:
+        for model_id in ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]:
             print("Computing perplexity using "+model_id)
             model = GPT2LMHeadModel.from_pretrained(model_id)
             tokenizer = GPT2TokenizerFast.from_pretrained(model_id)
