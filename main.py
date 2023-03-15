@@ -7,8 +7,8 @@ from features.perplexity import Perplexity
 
 random.seed(10)
 
-language = 'es'
-task = 'subtask_1'
+language = 'en'
+task = 'subtask_2'
 
 print("Loading data...")
 train_text = []
@@ -46,7 +46,7 @@ for i, line in enumerate(open(path)):
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    if i > 100:
+    if i > 1000:
         break
 
 train_Y = np.array(train_Y)
@@ -74,7 +74,7 @@ train_X = np.concatenate(train_X, axis=1)
 test_X = np.concatenate(test_X, axis=1)
 
 print("Building a model...")
-model = LogisticRegression().fit(train_X, train_Y)
+model = LogisticRegression(max_iter = 1000).fit(train_X, train_Y)
 
 print("Evaluating...")
 predictions = model.predict(test_X)
