@@ -7,42 +7,47 @@ from features.perplexity import Perplexity
 
 random.seed(10)
 
+language = 'es'
+task = 'subtask_1'
+
 print("Loading data...")
 train_text = []
 test_text = []
 train_Y = []
 test_Y = []
-path = pathlib.Path.home() / 'data' / 'autext' / 'data' / 'subtask_2' / 'en' / 'train.tsv'
+path = pathlib.Path.home() / 'data' / 'autext' / 'data' / task / language / 'train.tsv'
 for i, line in enumerate(open(path)):
     parts = line.strip().split('\t')
     sentence = parts[1]
     if sentence == 'text':
         continue
     Y = None
-    if parts[2] == 'generated':
-        Y = 1
-    elif parts[2] == 'human':
-        Y = 0
-    elif parts[2] == 'A':
-        Y = 0
-    elif parts[2] == 'B':
-        Y = 1
-    elif parts[2] == 'C':
-        Y = 2
-    elif parts[2] == 'D':
-        Y = 3
-    elif parts[2] == 'E':
-        Y = 4
-    elif parts[2] == 'F':
-        Y = 5
+    if task=='subtask_1':
+        if parts[2] == 'generated':
+            Y = 1
+        elif parts[2] == 'human':
+            Y = 0
+    if task == 'subtask_2':
+        if parts[2] == 'A':
+            Y = 0
+        elif parts[2] == 'B':
+            Y = 1
+        elif parts[2] == 'C':
+            Y = 2
+        elif parts[2] == 'D':
+            Y = 3
+        elif parts[2] == 'E':
+            Y = 4
+        elif parts[2] == 'F':
+            Y = 5
     if random.random() < 0.2:
         test_text.append(sentence)
         test_Y.append(Y)
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    # if i > 1000:
-    #    break
+    if i > 100:
+        break
 
 train_Y = np.array(train_Y)
 test_Y = np.array(test_Y)
