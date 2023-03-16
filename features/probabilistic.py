@@ -40,15 +40,18 @@ class ProbabilisticFeatures(FeatureGenerator):
                     shift_logits = logits[..., :-1, :].contiguous()
                     shift_labels = target_ids[..., 1:].contiguous()
                     probs = torch.nn.functional.softmax(shift_logits, dim=-1)
-                    probs_seen = torch.take_along_dim(probs, shift_labels).reshape(shift_labels.shape)
+                    probs_seen = torch.gather(probs, 2, shift_labels.reshape(shift_labels.shape + (1,))).reshape(
+                        shift_labels.shape)
                     greedy = torch.argmax(probs, -1)
-                    probs_greedy = torch.take_along_dim(probs, greedy).reshape(greedy.shape)
+                    probs_greedy = torch.gather(probs, 2, greedy.reshape(greedy.shape + (1,))).reshape(
+                        greedy.shape)
                     log_quotient = torch.log(probs_seen / probs_greedy)
                     for i in range(shift_logits.shape[0]):
                         # Mask to select only non-padding words
                         mask = encodings['attention_mask'][i][1:].to(torch.bool)
                         # Perplexity computed from probability of observed tokens
                         probs_seen_here = torch.masked_select(probs_seen[i], mask).to(self.local_device).numpy()
+                        # probs_seen_here = probs_seen[i].to(self.local_device).numpy()
                         if len(probs_seen_here) == 0:
                             perplexity = 0
                         else:
