@@ -10,14 +10,15 @@ fixed_len = 1024
 BATCH_SIZE = 16
 
 
-class Perplexity(FeatureGenerator):
+class ProbabilisticFeatures(FeatureGenerator):
     def __init__(self, device, local_device):
         self.device = device
         self.local_device = local_device
+        self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]
     
     def features(self, sentences):
         results = [[] for sentence in sentences]
-        for model_id in ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]:
+        for model_id in self.models:
             print("Computing perplexity using " + model_id)
             model = GPT2LMHeadModel.from_pretrained(model_id)
             tokenizer = GPT2TokenizerFast.from_pretrained(model_id)
@@ -44,18 +45,19 @@ class Perplexity(FeatureGenerator):
                     probs_greedy = torch.take_along_dim(probs, greedy).reshape(greedy.shape)
                     log_quotient = torch.log(probs_seen / probs_greedy)
                     for i in range(shift_logits.shape[0]):
-                        # Perplexity computed as cross-entropy loss
-                        loss = celoss(shift_logits[i], shift_labels[i]).to(self.local_device).numpy()
-                        loss = float(loss)
-                        if not np.isfinite(loss):
-                            loss = 0.0
-                        results[case_counter].append(np.exp(loss))
+                        # Mask to select only non-padding words
+                        mask = encodings['attention_mask'][i][1:].to(torch.bool)
+                        # Perplexity computed from probability of observed tokens
+                        probs_seen_here = torch.masked_select(probs_seen[i], mask).to(self.local_device).numpy()
+                        if len(probs_seen_here) == 0:
+                            perplexity = 0
+                        else:
+                            perplexity = np.exp(-np.mean(np.log(probs_seen_here)))
+                        results[case_counter].append(perplexity)
                         # Log-quotient of probabilities observed vs greedy choice
-                        log_quotient_here = torch.masked_select(log_quotient[i],
-                                                                encodings['attention_mask'][i][1:].to(torch.bool)).to(
-                            self.local_device).numpy()
-                        if len(log_quotient_here)==0:
-                            mean =0.0
+                        log_quotient_here = torch.masked_select(log_quotient[i], mask).to(self.local_device).numpy()
+                        if len(log_quotient_here) == 0:
+                            mean = 0.0
                             std = 0.0
                         else:
                             mean = np.mean(log_quotient_here)

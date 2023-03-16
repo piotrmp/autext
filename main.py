@@ -1,14 +1,17 @@
-import torch, pathlib, random
+import torch, pathlib, random, sys
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 
 from features.multitoken import MultiToken
-from features.perplexity import Perplexity
+from features.probabilistic import ProbabilisticFeatures
 
 random.seed(10)
 
 language = 'en'
 task = 'subtask_1'
+if len(sys.argv) == 3:
+    language = sys.argv[1]
+    task = sys.argv[2]
 
 print("Loading data...")
 train_text = []
@@ -22,7 +25,7 @@ for i, line in enumerate(open(path)):
     if sentence == 'text':
         continue
     Y = None
-    if task=='subtask_1':
+    if task == 'subtask_1':
         if parts[2] == 'generated':
             Y = 1
         elif parts[2] == 'human':
@@ -58,7 +61,7 @@ print("Loaded data with " + str(len(train_Y)) + " training instances and " + str
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 local_device = torch.device('cpu')
 
-perp = Perplexity(device, local_device)
+perp = ProbabilisticFeatures(device, local_device)
 mult = MultiToken()
 feature_generators = [perp, mult]
 
@@ -74,7 +77,7 @@ train_X = np.concatenate(train_X, axis=1)
 test_X = np.concatenate(test_X, axis=1)
 
 print("Building a model...")
-model = LogisticRegression(max_iter = 10000).fit(train_X, train_Y)
+model = LogisticRegression(max_iter=10000).fit(train_X, train_Y)
 
 print("Evaluating...")
 predictions = model.predict(test_X)
