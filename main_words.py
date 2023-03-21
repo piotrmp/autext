@@ -51,8 +51,8 @@ for i, line in enumerate(open(path)):
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    if i > 5000:
-        break
+    #if i > 5000:
+    #    break
 
 train_Y = np.array(train_Y)
 test_Y = np.array(test_Y)
@@ -80,8 +80,8 @@ test_X = np.concatenate(test_X, axis=2)
 
 print("Building a model...")
 BATCH_SIZE = 16
-train_dataset = TensorDataset(torch.tensor(train_X).float().to(device), torch.tensor(np.array(train_Y)).long().to(device))
-test_dataset = TensorDataset(torch.tensor(test_X).float().to(device), torch.tensor(np.array(test_Y)).long().to(device))
+train_dataset = TensorDataset(torch.tensor(train_X).float(), torch.tensor(np.array(train_Y)).long())
+test_dataset = TensorDataset(torch.tensor(test_X).float(), torch.tensor(np.array(test_Y)).long())
 train_loader = DataLoader(train_dataset, shuffle=True, batch_size=BATCH_SIZE)
 test_loader = DataLoader(test_dataset, shuffle=True, batch_size=BATCH_SIZE)
 
@@ -109,7 +109,7 @@ class BiLSTM(Module):
     
     @staticmethod
     def postprocessing(Y):
-        decisions = Y.argmax(1).to(torch.device('cpu')).numpy()
+        decisions = Y.argmax(1).to(local_device).numpy()
         return decisions
 
 
@@ -126,7 +126,7 @@ def train_loop(dataloader, model, optimizer, device, skip_visual=False):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        losses.append(loss.detach().to(torch.device('cpu')).numpy())
+        losses.append(loss.detach().to(local_device).numpy())
         progress_bar.update(1)
     print('Train loss: ' + str(np.mean(losses)))
 
@@ -144,7 +144,7 @@ def eval_loop(dataloader, model, device, skip_visual=False):
         for X, Y in dataloader:
             X = X.to(device)
             pred = model.postprocessing(model(X))
-            Y = Y.to(torch.device('cpu')).numpy()
+            Y = Y.numpy()
             eq = np.equal(Y, pred)
             size += len(eq)
             correct += sum(eq)
@@ -156,7 +156,7 @@ def eval_loop(dataloader, model, device, skip_visual=False):
     print('F1: ' + str(2 * TPs / (2 * TPs + FPs + FNs)))
 
 # TODO: understand why
-model = BiLSTM()
+model = BiLSTM().to(device)
 print("Preparing training")
 model = model.to(device)
 learning_rate = 1e-3
