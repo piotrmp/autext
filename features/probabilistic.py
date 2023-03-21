@@ -13,7 +13,7 @@ class ProbabilisticFeatures(FeatureGenerator):
     def __init__(self, device, local_device):
         self.device = device
         self.local_device = local_device
-        self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"][:2]
+        self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]
     
     def features(self, sentences):
         results = [[] for sentence in sentences]
