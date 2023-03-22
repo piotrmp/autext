@@ -17,7 +17,7 @@ class ProbabilisticFeatures(FeatureGenerator):
         if language == 'en':
             self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]
         elif language == 'es':
-            self.models = ["PlanTL-GOB-ES/gpt2-base-bne", "PlanTL-GOB-ES/gpt2-large-bne"][:1]
+            self.models = ["PlanTL-GOB-ES/gpt2-base-bne", "PlanTL-GOB-ES/gpt2-large-bne"]
     
     def word_features(self, sentences):
         results = np.zeros((len(sentences), fixed_len, 3 * len(self.models)))

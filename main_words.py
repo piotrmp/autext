@@ -51,8 +51,8 @@ for i, line in enumerate(open(path)):
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    if i > 1000:
-        break
+    #if i > 1000:
+    #    break
 
 train_Y = np.array(train_Y)
 test_Y = np.array(test_Y)
