@@ -10,7 +10,7 @@ from features.probabilistic import ProbabilisticFeatures
 random.seed(10)
 
 language = 'en'
-task = 'subtask_1'
+task = 'subtask_2'
 if len(sys.argv) == 3:
     language = sys.argv[1]
     task = sys.argv[2]
@@ -51,8 +51,8 @@ for i, line in enumerate(open(path)):
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    #if i > 1000:
-    #    break
+    if i > 1000:
+        break
 
 train_Y = np.array(train_Y)
 test_Y = np.array(test_Y)
@@ -153,9 +153,8 @@ def eval_loop(dataloader, model, device, skip_visual=False):
             FNs += sum(np.logical_and(np.equal(Y, 1.0), np.equal(pred, 0.0)))
             progress_bar.update(1)
     print('Accuracy: ' + str(correct / size))
-    print('F1: ' + str(2 * TPs / (2 * TPs + FPs + FNs)))
+    print('Binary F1: ' + str(2 * TPs / (2 * TPs + FPs + FNs)))
 
-# TODO: understand why
 model = BiLSTM().to(device)
 print("Preparing training")
 model = model.to(device)

@@ -7,6 +7,7 @@ from tqdm.auto import tqdm
 
 fixed_len = 1024
 BATCH_SIZE = 16
+eps = 1e-40
 
 
 class ProbabilisticFeatures(FeatureGenerator):
@@ -57,7 +58,7 @@ class ProbabilisticFeatures(FeatureGenerator):
                     probs_greedy = torch.gather(probs, 2, greedy.reshape(greedy.shape + (1,))).reshape(
                         greedy.shape)
                     log_probs_greedy = torch.log(probs_greedy).to(self.local_device).numpy()
-                    entropy = torch.sum(torch.log2(probs) * (-probs), dim=-1).to(self.local_device).numpy()
+                    entropy = torch.sum(torch.log2(probs + eps) * (-probs), dim=-1).to(self.local_device).numpy()
                     mask = np.array([x[1:].to(self.local_device).numpy() for x in encodings['attention_mask']])
                     results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM] = log_probs_seen * mask
