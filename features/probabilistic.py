@@ -16,7 +16,7 @@ class ProbabilisticFeatures(FeatureGenerator):
         self.local_device = local_device
         self.language = language
         if language == 'en':
-            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]
+            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"][:1]
         elif language == 'es':
             self.models = ["PlanTL-GOB-ES/gpt2-base-bne", "PlanTL-GOB-ES/gpt2-large-bne"]
     
@@ -53,13 +53,18 @@ class ProbabilisticFeatures(FeatureGenerator):
                     probs = torch.nn.functional.softmax(shift_logits, dim=-1)
                     probs_seen = torch.gather(probs, 2, shift_labels.reshape(shift_labels.shape + (1,))).reshape(
                         shift_labels.shape)
-                    log_probs_seen = torch.log(probs_seen).to(self.local_device).numpy()
                     greedy = torch.argmax(probs, -1)
                     probs_greedy = torch.gather(probs, 2, greedy.reshape(greedy.shape + (1,))).reshape(
                         greedy.shape)
+                    # Prepare the vectors for output
+                    log_probs_seen = torch.log(probs_seen).to(self.local_device).numpy()
+                    log_probs_seen = np.concatenate((np.array([[0]] * len(batch)), log_probs_seen), axis=1)
                     log_probs_greedy = torch.log(probs_greedy).to(self.local_device).numpy()
+                    log_probs_greedy = np.concatenate((np.array([[0]] * len(batch)), log_probs_greedy), axis=1)
                     entropy = torch.sum(torch.log2(probs + eps) * (-probs), dim=-1).to(self.local_device).numpy()
-                    mask = np.array([x[1:].to(self.local_device).numpy() for x in encodings['attention_mask']])
+                    entropy = np.concatenate((np.array([[0]] * len(batch)), entropy), axis=1)
+                    mask = np.array([x.to(self.local_device).numpy() for x in encodings['attention_mask']])
+                    # Store the data
                     results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM] = log_probs_seen * mask
                     results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],

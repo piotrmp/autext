@@ -10,7 +10,7 @@ from features.probabilistic import ProbabilisticFeatures
 random.seed(10)
 
 language = 'en'
-task = 'subtask_2'
+task = 'subtask_1'
 if len(sys.argv) == 3:
     language = sys.argv[1]
     task = sys.argv[2]
