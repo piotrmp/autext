@@ -9,7 +9,7 @@ from features.probabilistic import ProbabilisticFeatures
 
 random.seed(10)
 
-language = 'en'
+language = 'es'
 task = 'subtask_1'
 if len(sys.argv) == 3:
     language = sys.argv[1]
@@ -51,7 +51,7 @@ for i, line in enumerate(open(path)):
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    if i > 5000:
+    if i > 1000:
         break
 
 train_Y = np.array(train_Y)
