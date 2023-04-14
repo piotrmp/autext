@@ -47,8 +47,8 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    if i > 1000:
-        break
+    #if i > 1000:
+    #    break
 
 all_Y = np.array(all_Y)
 all_folds = np.array(all_folds)
