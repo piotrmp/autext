@@ -47,7 +47,7 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    if i > 5000:
+    if i > 1000:
         break
 
 all_Y = np.array(all_Y)
@@ -82,7 +82,7 @@ for fold in np.unique(all_folds):
     train_dataset = TensorDataset(torch.tensor(train_X).float(), torch.tensor(np.array(train_Y)).long())
     test_dataset = TensorDataset(torch.tensor(test_X).float(), torch.tensor(np.array(test_Y)).long())
     train_loader = DataLoader(train_dataset, shuffle=True, batch_size=BATCH_SIZE)
-    test_loader = DataLoader(test_dataset, shuffle=True, batch_size=BATCH_SIZE)
+    test_loader = DataLoader(test_dataset, shuffle=False, batch_size=BATCH_SIZE)
     
     model = BiLSTM(all_X.shape[2], task, local_device).to(device)
     print("Preparing training")
