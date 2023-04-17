@@ -1,5 +1,6 @@
 import torch, pathlib, random, sys
 import numpy as np
+from sklearn.metrics import f1_score
 from torch.utils.data import TensorDataset, DataLoader
 from torch.optim import Adam
 from models.bilstm import train_loop, eval_loop, BiLSTM
@@ -47,8 +48,8 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    #if i > 1000:
-    #    break
+    if i > 100:
+        break
 
 all_Y = np.array(all_Y)
 all_folds = np.array(all_folds)
@@ -99,3 +100,5 @@ for fold in np.unique(all_folds):
 
 overall_accuracy = np.mean(result == all_Y)
 print('Total accuracy: ' + str(overall_accuracy))
+f1_macro = f1_score(y_true=all_Y, y_pred=result, average="macro")
+print('F1 score: ' + str(f1_macro))
