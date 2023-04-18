@@ -40,11 +40,13 @@ class ProbabilisticFeatures(FeatureGenerator):
             batches = [sentences[i:i + BATCH_SIZE] for i in range(0, len(sentences), BATCH_SIZE)]
             progress_bar = tqdm(range(len(batches)), ascii=True)
             # Random numbers instead of model
-            results[:, :, (i_m * FEATURE_NUM):((i_m+1) * FEATURE_NUM )] = np.random.random((len(sentences), fixed_len, FEATURE_NUM))
-            continue
+            #results[:, :, (i_m * FEATURE_NUM):((i_m+1) * FEATURE_NUM )] = np.random.random((len(sentences), fixed_len, FEATURE_NUM))
+            #continue
             ##
             with torch.no_grad():
                 for i_b, batch in enumerate(batches):
+                    if i_b>=5:
+                        break
                     # Warning: tokenising for each model, but assuming all tokenisers produce aligned outputs
                     encodings = tokenizer(batch, padding=True, truncation=True, max_length=fixed_len,
                                           return_offsets_mapping=True, return_tensors="pt")
