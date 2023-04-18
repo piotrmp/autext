@@ -16,7 +16,7 @@ class ProbabilisticFeatures(FeatureGenerator):
         self.local_device = local_device
         self.language = language
         if language == 'en':
-            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large", "gpt2-xl"]
+            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]#, "gpt2-xl"]
         elif language == 'es':
             self.models = ["PlanTL-GOB-ES/gpt2-base-bne", "PlanTL-GOB-ES/gpt2-large-bne"]  # eq to gpt2 and gpt2-large
     
@@ -45,8 +45,6 @@ class ProbabilisticFeatures(FeatureGenerator):
             ##
             with torch.no_grad():
                 for i_b, batch in enumerate(batches):
-                    if i_b>=5:
-                        break
                     # Warning: tokenising for each model, but assuming all tokenisers produce aligned outputs
                     encodings = tokenizer(batch, padding=True, truncation=True, max_length=fixed_len,
                                           return_offsets_mapping=True, return_tensors="pt")

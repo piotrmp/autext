@@ -70,6 +70,12 @@ for feature_generator in feature_generators:
 
 all_X = np.concatenate(all_X, axis=2)
 
+# CUDA memory cleaning
+torch.cuda.empty_cache()
+print(str(torch.cuda.get_device_properties(0).total_memory))
+print(str(torch.cuda.memory_reserved(0)))
+print(str(torch.cuda.memory_allocated(0)))
+
 result = np.empty(all_Y.shape)
 for fold in np.unique(all_folds):
     print("Working on fold " + str(fold))
