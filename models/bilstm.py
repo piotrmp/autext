@@ -7,7 +7,7 @@ class BiLSTM(Module):
     
     def __init__(self, feature_len, task, local_device):
         super(BiLSTM, self).__init__()
-        self.lstm_layer = LSTM(input_size=feature_len, hidden_size=16, batch_first=True, bidirectional=True)
+        self.lstm_layer = LSTM(input_size=feature_len, hidden_size=64, batch_first=True, bidirectional=True)
         self.linear_layer = Linear(self.lstm_layer.hidden_size * 2, 2 if task == 'subtask_1' else 6)
         self.softmax_layer = LogSoftmax(1)
         self.loss_fn = NLLLoss()
