@@ -19,6 +19,7 @@ print("Loading data...")
 all_text = []
 all_Y = []
 all_folds = []
+all_ids = []
 path = pathlib.Path.home() / 'data' / 'autext' / 'data' / task / language / 'train.tsv'
 path_CV = pathlib.Path.home() / 'data' / 'autext' / 'data' / task / language / 'train_topic.tsv'
 for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
@@ -26,6 +27,7 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     sentence = parts[1]
     if sentence == 'text':
         continue
+    all_ids.append(parts[0])
     Y = None
     if task == 'subtask_1':
         if parts[2] == 'generated':
@@ -70,11 +72,19 @@ for feature_generator in feature_generators:
 
 all_X = np.concatenate(all_X, axis=2)
 
+# Output probabilistic features to TSV if necessary
+out_TSV = pathlib.Path.home() / 'data' / 'autext' / 'probfeatures.tsv'
+if out_TSV:
+    with open(out_TSV, 'w') as writer:
+        for id, array in zip(all_ids, perp.aggregated_results):
+            writer.write(id+'\t'+'\t'.join([str(x) for x in array])+'\n')
+
 # CUDA memory cleaning
-torch.cuda.empty_cache()
-print(str(torch.cuda.get_device_properties(0).total_memory))
-print(str(torch.cuda.memory_reserved(0)))
-print(str(torch.cuda.memory_allocated(0)))
+if torch.cuda.is_available():
+    torch.cuda.empty_cache()
+    print(str(torch.cuda.get_device_properties(0).total_memory))
+    print(str(torch.cuda.memory_reserved(0)))
+    print(str(torch.cuda.memory_allocated(0)))
 
 result = np.empty(all_Y.shape)
 for fold in np.unique(all_folds):

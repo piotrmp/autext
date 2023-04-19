@@ -16,7 +16,7 @@ class ProbabilisticFeatures(FeatureGenerator):
         self.local_device = local_device
         self.language = language
         if language == 'en':
-            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]#, "gpt2-xl"]
+            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]  # , "gpt2-xl"]
         elif language == 'es':
             self.models = ["PlanTL-GOB-ES/gpt2-base-bne", "PlanTL-GOB-ES/gpt2-large-bne"]  # eq to gpt2 and gpt2-large
     
@@ -24,6 +24,7 @@ class ProbabilisticFeatures(FeatureGenerator):
         FEATURE_NUM = 3
         results = np.zeros((len(sentences), fixed_len, FEATURE_NUM * len(self.models) + 1))
         reference_tokenisations = {}
+        self.aggregated_results = np.zeros((len(sentences), FEATURE_NUM * len(self.models)))
         for i_m, model_id in enumerate(self.models):
             print("Computing perplexity using " + model_id)
             if not model_id.startswith('PlanTL-GOB-ES'):
@@ -40,8 +41,8 @@ class ProbabilisticFeatures(FeatureGenerator):
             batches = [sentences[i:i + BATCH_SIZE] for i in range(0, len(sentences), BATCH_SIZE)]
             progress_bar = tqdm(range(len(batches)), ascii=True)
             # Random numbers instead of model
-            #results[:, :, (i_m * FEATURE_NUM):((i_m+1) * FEATURE_NUM )] = np.random.random((len(sentences), fixed_len, FEATURE_NUM))
-            #continue
+            # results[:, :, (i_m * FEATURE_NUM):((i_m+1) * FEATURE_NUM )] = np.random.random((len(sentences), fixed_len, FEATURE_NUM))
+            # continue
             ##
             with torch.no_grad():
                 for i_b, batch in enumerate(batches):
@@ -79,12 +80,21 @@ class ProbabilisticFeatures(FeatureGenerator):
                     if i_m == 0:
                         results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1], 0] = mask
                     # Store the data
+                    # Output per-token results
                     results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM + 1] = log_probs_seen * mask
                     results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM + 2] = log_probs_greedy * mask
                     results[(i_b * BATCH_SIZE):(i_b * BATCH_SIZE + len(batch)), :mask.shape[1],
                     i_m * FEATURE_NUM + 3] = entropy * mask
+                    # Output aggregated results
+                    for i in range(len(batch)):
+                        self.aggregated_results[i_b * BATCH_SIZE + i, i_m * FEATURE_NUM] = np.mean(
+                            log_probs_seen[i, mask[i] == 1])
+                        self.aggregated_results[i_b * BATCH_SIZE + i, i_m * FEATURE_NUM + 1] = np.mean(
+                            log_probs_greedy[i, mask[i] == 1])
+                        self.aggregated_results[i_b * BATCH_SIZE + i, i_m * FEATURE_NUM + 2] = np.mean(
+                            entropy[i, mask[i] == 1])
                     progress_bar.update(1)
         return results
     
@@ -103,6 +113,6 @@ class ProbabilisticFeatures(FeatureGenerator):
                         i_r = i_r + 1
                     if ref[i_r][1] > new[i_n][0] and ref[i_r][0] < new[i_n][1]:
                         result[i_n] = i_r
-                        #i_r = i_r + 1
+                        # i_r = i_r + 1
                 results.append(result)
             return results
