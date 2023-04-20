@@ -50,8 +50,8 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    #if i > 100:
-    #    break
+    if i > 100:
+        break
 
 all_Y = np.array(all_Y)
 all_folds = np.array(all_folds)
@@ -73,11 +73,11 @@ for feature_generator in feature_generators:
 all_X = np.concatenate(all_X, axis=2)
 
 # Output probabilistic features to TSV if necessary
-out_TSV = pathlib.Path.home() / 'data' / 'autext' / 'probfeatures.tsv'
+out_TSV = None  # pathlib.Path.home() / 'data' / 'autext' / 'probfeatures.tsv'
 if out_TSV:
     with open(out_TSV, 'w') as writer:
         for id, array in zip(all_ids, perp.aggregated_results):
-            writer.write(id+'\t'+'\t'.join([str(x) for x in array])+'\n')
+            writer.write(id + '\t' + '\t'.join([str(x) for x in array]) + '\n')
 
 # CUDA memory cleaning
 if torch.cuda.is_available():
@@ -87,6 +87,7 @@ if torch.cuda.is_available():
     print(str(torch.cuda.memory_allocated(0)))
 
 result = np.empty(all_Y.shape)
+partial_f1s = []
 for fold in np.unique(all_folds):
     print("Working on fold " + str(fold))
     train_X = all_X[all_folds != fold]
@@ -113,8 +114,13 @@ for fold in np.unique(all_folds):
         train_loop(train_loader, model, optimizer, device, local_device, skip_visual)
         pred = eval_loop(test_loader, model, device, local_device, skip_visual)
     result[all_folds == fold] = pred
+    partial_f1s.append(f1_score(y_true=all_Y[all_folds == fold], y_pred=pred, average="macro"))
 
 overall_accuracy = np.mean(result == all_Y)
 print('Total accuracy: ' + str(overall_accuracy))
 f1_macro = f1_score(y_true=all_Y, y_pred=result, average="macro")
-print('F1 score: ' + str(f1_macro))
+print('Partial F1 scores:')
+for x in partial_f1s:
+    print('\t' + str(x))
+print('Total F1 score: ' + str(f1_macro))
+print('Variance: ' + str(np.var(partial_f1s)))
