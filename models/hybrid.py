@@ -5,10 +5,10 @@ from transformers import RobertaModel
 
 class HybridBiLSTMRoBERTa(Module):
     
-    def __init__(self, seq_feature_len, task, local_device):
+    def __init__(self, seq_feature_len, task, local_device, roberta_variant):
         super(HybridBiLSTMRoBERTa, self).__init__()
         self.lstm_layer = LSTM(input_size=seq_feature_len, hidden_size=64, batch_first=True, bidirectional=True)
-        self.roberta = RobertaModel.from_pretrained('roberta-base')
+        self.roberta = RobertaModel.from_pretrained(roberta_variant)
         self.linear_layer = Linear(self.lstm_layer.hidden_size * 2 + self.roberta.config.hidden_size,
                                    2 if task == 'subtask_1' else 6)
         self.softmax_layer = LogSoftmax(1)

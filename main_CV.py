@@ -129,7 +129,7 @@ for fold in np.unique(all_folds):
     if model_type == 'BiLSTM':
         model = BiLSTM(all_X.shape[2], task, local_device).to(device)
     elif model_type == 'Hybrid':
-        model = HybridBiLSTMRoBERTa(all_X.shape[2], task, local_device).to(device)
+        model = HybridBiLSTMRoBERTa(all_X.shape[2], task, local_device, roberta_variant).to(device)
     print("Preparing training")
     model = model.to(device)
     learning_rate = 1e-3
