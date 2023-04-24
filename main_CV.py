@@ -23,6 +23,7 @@ if len(sys.argv) == 3:
     
 #model_type = 'BiLSTM'
 model_type='Hybrid'
+disable_sequence = True
 
 if language == 'en':
     roberta_variant = "roberta-base"
@@ -77,7 +78,7 @@ print("Loaded data with " + str(len(all_Y)) + " instances.")
 device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 local_device = torch.device('cpu')
 
-perp = ProbabilisticFeatures(device, local_device, language)
+perp = ProbabilisticFeatures(device, local_device, language, disable_sequence)
 feature_generators = [perp]
 
 print("Generating sequence features...")

@@ -11,7 +11,7 @@ eps = 1e-40
 
 
 class ProbabilisticFeatures(FeatureGenerator):
-    def __init__(self, device, local_device, language):
+    def __init__(self, device, local_device, language, disabled):
         self.device = device
         self.local_device = local_device
         self.language = language
@@ -19,10 +19,13 @@ class ProbabilisticFeatures(FeatureGenerator):
             self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]#[:1]  # , "gpt2-xl"]
         elif language == 'es':
             self.models = ["PlanTL-GOB-ES/gpt2-base-bne", "PlanTL-GOB-ES/gpt2-large-bne"]  # eq to gpt2 and gpt2-large
+        self.disabled = disabled
     
     def word_features(self, sentences):
         FEATURE_NUM = 3
         results = np.zeros((len(sentences), fixed_len, FEATURE_NUM * len(self.models) + 1))
+        if self.disabled:
+            return results
         reference_tokenisations = {}
         self.aggregated_results = np.zeros((len(sentences), FEATURE_NUM * len(self.models)))
         for i_m, model_id in enumerate(self.models):
