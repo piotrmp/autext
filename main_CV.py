@@ -66,8 +66,8 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    #if i > 1000:
-    #    break
+    if i > 1000:
+        break
 
 all_Y = np.array(all_Y)
 all_folds = np.array(all_folds)
@@ -130,10 +130,10 @@ for fold in np.unique(all_folds):
     if model_type == 'BiLSTM':
         model = BiLSTM(all_X.shape[2], task, local_device).to(device)
     elif model_type == 'Hybrid':
-        model = HybridBiLSTMRoBERTa(all_X.shape[2], task, local_device, roberta_variant).to(device)
+        model = HybridBiLSTMRoBERTa(all_X.shape[2], task, local_device, roberta_variant, disable_sequence).to(device)
     print("Preparing training")
     model = model.to(device)
-    learning_rate = 1e-3
+    learning_rate = 2e-5#1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
     skip_visual = False
     pred = eval_loop(test_loader, model, device, local_device, skip_visual)
