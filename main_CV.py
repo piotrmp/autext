@@ -5,6 +5,7 @@ import sys
 import torch
 from sklearn.metrics import f1_score
 from torch.optim import Adam
+from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import TensorDataset, DataLoader
 from transformers import RobertaTokenizer
 
@@ -20,16 +21,15 @@ task = 'subtask_1'
 if len(sys.argv) == 3:
     language = sys.argv[1]
     task = sys.argv[2]
-    
-#model_type = 'BiLSTM'
-model_type='Hybrid'
-disable_sequence = True
+
+# model_type = 'BiLSTM'
+model_type = 'Hybrid'
+disable_sequence = False
 
 if language == 'en':
     roberta_variant = "roberta-base"
 elif language == 'es':
     roberta_variant = 'PlanTL-GOB-ES/roberta-base-bne'
-
 
 print("Loading data...")
 all_text = []
@@ -66,8 +66,8 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    if i > 1000:
-        break
+    #if i > 1000:
+    #    break
 
 all_Y = np.array(all_Y)
 all_folds = np.array(all_folds)
@@ -133,13 +133,20 @@ for fold in np.unique(all_folds):
         model = HybridBiLSTMRoBERTa(all_X.shape[2], task, local_device, roberta_variant, disable_sequence).to(device)
     print("Preparing training")
     model = model.to(device)
-    learning_rate = 2e-5#1e-3
+    learning_rate = 1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
+    milestones = [5] if model_type == 'Hybrid' else []
+    scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.02)
     skip_visual = False
     pred = eval_loop(test_loader, model, device, local_device, skip_visual)
     for epoch in range(10):
         print("EPOCH " + str(epoch + 1))
-        train_loop(train_loader, model, optimizer, device, local_device, skip_visual)
+        if model_type == 'Hybrid':
+            if epoch < 5:
+                model.freeze_llm()
+            else:
+                model.unfreeze_llm()
+        train_loop(train_loader, model, optimizer, scheduler, device, local_device, skip_visual)
         pred = eval_loop(test_loader, model, device, local_device, skip_visual)
     result[all_folds == fold] = pred
     partial_f1s.append(f1_score(y_true=all_Y[all_folds == fold], y_pred=pred, average="macro"))

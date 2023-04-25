@@ -2,7 +2,7 @@ import torch
 from tqdm.auto import tqdm
 import numpy as np
 
-def train_loop(dataloader, model, optimizer, device, local_device, skip_visual=False):
+def train_loop(dataloader, model, optimizer, scheduler, device, local_device, skip_visual=False):
     print("Training...")
     model.train()
     progress_bar = tqdm(range(len(dataloader)), ascii=True, disable=skip_visual)
@@ -18,6 +18,7 @@ def train_loop(dataloader, model, optimizer, device, local_device, skip_visual=F
         optimizer.step()
         losses.append(loss.detach().to(local_device).numpy())
         progress_bar.update(1)
+    scheduler.step()
     print('Train loss: ' + str(np.mean(losses)))
 
 

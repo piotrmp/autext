@@ -7,8 +7,8 @@ class HybridBiLSTMRoBERTa(Module):
     
     def __init__(self, seq_feature_len, task, local_device, roberta_variant, disable_sequence):
         super(HybridBiLSTMRoBERTa, self).__init__()
-        self.roberta = RobertaModel.from_pretrained(roberta_variant)
-        linear_size = self.roberta.config.hidden_size
+        self.llm = RobertaModel.from_pretrained(roberta_variant)
+        linear_size = self.llm.config.hidden_size
         if not disable_sequence:
             self.lstm_layer = LSTM(input_size=seq_feature_len, hidden_size=64, batch_first=True, bidirectional=True)
             linear_size += self.lstm_layer.hidden_size * 2
@@ -19,7 +19,7 @@ class HybridBiLSTMRoBERTa(Module):
         self.disable_sequence = disable_sequence
     
     def forward(self, x_sequence_features, x_input_ids, x_attention_mask):
-        roberta_output = self.roberta(x_input_ids, x_attention_mask)['pooler_output']
+        roberta_output = self.llm(x_input_ids, x_attention_mask)['pooler_output']
         if not self.disable_sequence:
             _, (hidden_state, _) = self.lstm_layer(x_sequence_features)
             transposed = torch.transpose(hidden_state, 0, 1)
@@ -38,3 +38,13 @@ class HybridBiLSTMRoBERTa(Module):
     def postprocessing(self, Y):
         decisions = Y.argmax(1).to(self.local_device).numpy()
         return decisions
+
+    def freeze_llm(self):
+        for param in self.llm.parameters():
+            param.requires_grad = False
+
+    def unfreeze_llm(self):
+        for param in self.llm.parameters():
+            param.requires_grad = True
+
+
