@@ -67,7 +67,7 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    #if i > 1000:
+    #if i > 100:
     #    break
 
 all_Y = np.array(all_Y)
@@ -83,7 +83,7 @@ perp = ProbabilisticFeatures(device, local_device, language, disable_sequence)
 feature_generators = [perp]
 
 print("Generating text derivations...")
-text_derivator = TextDerivator(language, device)
+text_derivator = TextDerivator(language, device, path.parent / 'train-derived.tsv')
 derivations = text_derivator.derive(all_text)
 
 print("Generating sequence features...")
