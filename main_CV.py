@@ -76,7 +76,7 @@ all_folds = np.array(all_folds)
 print("Loaded data with " + str(len(all_Y)) + " instances.")
 
 # Preparing feature generators
-device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 local_device = torch.device('cpu')
 
 perp = ProbabilisticFeatures(device, local_device, language, disable_sequence)
