@@ -5,7 +5,7 @@ from transformers import GPT2LMHeadModel, GPT2TokenizerFast, AutoTokenizer, Auto
 
 from features.feature_generator import FeatureGenerator
 
-fixed_len = 1024
+fixed_len = 128
 BATCH_SIZE = 16
 eps = 1e-40
 

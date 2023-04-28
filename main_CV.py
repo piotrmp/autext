@@ -17,7 +17,7 @@ from models.training import eval_loop, train_loop
 
 random.seed(10)
 
-language = 'es'
+language = 'en'
 task = 'subtask_1'
 if len(sys.argv) == 3:
     language = sys.argv[1]
