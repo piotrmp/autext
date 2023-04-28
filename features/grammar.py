@@ -1,0 +1,54 @@
+from transformers import GPT2LMHeadModel, GPT2TokenizerFast, AutoTokenizer, AutoModelForCausalLM
+import torch
+import numpy as np
+import language_tool_python
+
+from features.feature_generator import FeatureGenerator
+from tqdm.auto import tqdm
+
+fixed_len = 100
+BATCH_SIZE = 16
+#eps = 1e-40
+
+class GrammarFeatures(FeatureGenerator):
+    def __init__(self, device, local_device, language):
+        self.device = device
+        self.local_device = local_device
+        self.language = language
+        self.difference_window = 5
+
+        if language == 'en':
+            self.tokenizer = GPT2TokenizerFast.from_pretrained("distilgpt2")
+            self.tokenizer.pad_token = self.tokenizer.eos_token
+            # import grammar checker
+            #self.grammar_checker = HappyTextToText("T5", "vennify/t5-base-grammar-correction")
+            self.grammar_checker = language_tool_python.LanguageToolPublicAPI('en')
+
+        elif language == 'es':
+            self.tokenizer = GPT2TokenizerFast.from_pretrained("PlanTL-GOB-ES/gpt2-base-bne")
+            self.tokenizer.pad_token = '?'
+            # import grammar checker
+            self.grammar_checker = language_tool_python.LanguageToolPublicAPI('es')
+    
+    def word_features(self, sentences):
+        FEATURE_NUM = 1
+        results = np.zeros((len(sentences), fixed_len, FEATURE_NUM))
+        #for i_m, model_id in enumerate(self.models):
+        print("Computing grammar errors")
+
+        for i, sentence in tqdm(enumerate(sentences)):
+            # check grammar
+            sentence_checked = self.grammar_checker.correct(sentence)
+
+            sentence_tokenized = self.tokenizer.convert_ids_to_tokens(self.tokenizer.encode(sentence))
+            sentence_checked_tokenized = self.tokenizer.convert_ids_to_tokens(self.tokenizer.encode(sentence_checked))
+
+            diff = self.difference_window
+            sentence_results = [word in sentence_checked_tokenized[max(0,i-diff):min(len(sentence_tokenized),i+diff+1)] for i, word in enumerate(sentence_tokenized)]
+
+            # replace values in results array
+            for j,grammar_value in enumerate(sentence_results[:fixed_len]):
+                results[i][j] = int(grammar_value)
+
+            
+        return results
