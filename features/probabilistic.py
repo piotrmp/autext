@@ -16,7 +16,7 @@ class ProbabilisticFeatures(FeatureGenerator):
         self.local_device = local_device
         self.language = language
         if language == 'en':
-            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"]#[:1]  # , "gpt2-xl"]
+            self.models = ["distilgpt2", "gpt2", "gpt2-medium", "gpt2-large"][:1]  # , "gpt2-xl"]
         elif language == 'es':
             self.models = ["PlanTL-GOB-ES/gpt2-base-bne", "PlanTL-GOB-ES/gpt2-large-bne"]  # eq to gpt2 and gpt2-large
         self.disabled = disabled
