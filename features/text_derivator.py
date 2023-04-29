@@ -39,9 +39,13 @@ class TextDerivator():
         batches = [shortened[i:i + BATCH_SIZE] for i in range(0, len(shortened), BATCH_SIZE)]
         progress_bar = tqdm(range(len(batches)), ascii=True)
         for batch in batches:
-            outs = generator(batch, max_length=100, num_return_sequences=1,
-                             pad_token_id=generator.tokenizer.eos_token_id)
-            result_here = [x[0]['generated_text'] for x in outs]
+            result_here = batch
+            try:
+                outs = generator(batch, max_length=100, num_return_sequences=1,
+                                 pad_token_id=generator.tokenizer.eos_token_id)
+                result_here = [x[0]['generated_text'] for x in outs]
+            except RuntimeError:
+                print("ERROR in text derivation model, skipping batch.")
             result.extend(result_here)
             progress_bar.update(1)
         lens = [len(text.split(' ')) for text in result]
