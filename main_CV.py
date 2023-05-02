@@ -9,8 +9,10 @@ from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import TensorDataset, DataLoader
 from transformers import RobertaTokenizer
 
+from features.grammar import GrammarFeatures
 from features.probabilistic import ProbabilisticFeatures, fixed_len
 from features.text_derivator import TextDerivator
+from features.word_frequency import WordFrequency
 from models.bilstm import BiLSTM
 from models.hybrid import HybridBiLSTMRoBERTa
 from models.training import eval_loop, train_loop
@@ -67,7 +69,7 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    #if i > 100:
+    #if i > 1000:
     #    break
 
 all_Y = np.array(all_Y)
@@ -80,15 +82,17 @@ device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("
 local_device = torch.device('cpu')
 
 perp = ProbabilisticFeatures(device, local_device, language, disable_sequence)
-feature_generators = [perp]
+#gram = GrammarFeatures(device, local_device, language)
+freq = WordFrequency(device, local_device, language)
+feature_generators = [perp, freq]
 
-print("Generating text derivations...")
-text_derivator = TextDerivator(language, device, path.parent / 'train-derived.tsv')
-derivations = text_derivator.derive(all_text)
+#print("Generating text derivations...")
+#text_derivator = TextDerivator(language, device, path.parent / 'train-derived.tsv')
+#derivations = text_derivator.derive(all_text)
 
 print("Generating sequence features...")
 all_X = []
-for text_variant in [all_text, derivations]:
+for text_variant in [all_text]:#, derivations]:
     for feature_generator in feature_generators:
         all_X.append(np.array(feature_generator.word_features(text_variant)))
 all_X = np.concatenate(all_X, axis=2)

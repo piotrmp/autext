@@ -6,7 +6,7 @@ import language_tool_python
 from features.feature_generator import FeatureGenerator
 from tqdm.auto import tqdm
 
-fixed_len = 100
+fixed_len = 128
 BATCH_SIZE = 16
 #eps = 1e-40
 
@@ -16,7 +16,7 @@ class GrammarFeatures(FeatureGenerator):
         self.local_device = local_device
         self.language = language
         self.difference_window = 5
-
+        print("Initiating grammar checking...")
         if language == 'en':
             self.tokenizer = GPT2TokenizerFast.from_pretrained("distilgpt2")
             self.tokenizer.pad_token = self.tokenizer.eos_token
@@ -34,9 +34,9 @@ class GrammarFeatures(FeatureGenerator):
         FEATURE_NUM = 1
         results = np.zeros((len(sentences), fixed_len, FEATURE_NUM))
         #for i_m, model_id in enumerate(self.models):
-        print("Computing grammar errors")
-
-        for i, sentence in tqdm(enumerate(sentences)):
+        print("Computing grammar errors...")
+        progress_bar = tqdm(range(len(sentences)), ascii=True)
+        for i, sentence in enumerate(sentences):
             # check grammar
             sentence_checked = self.grammar_checker.correct(sentence)
 
@@ -49,6 +49,6 @@ class GrammarFeatures(FeatureGenerator):
             # replace values in results array
             for j,grammar_value in enumerate(sentence_results[:fixed_len]):
                 results[i][j] = int(grammar_value)
-
+            progress_bar.update(1)
             
         return results
