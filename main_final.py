@@ -9,7 +9,9 @@ from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import TensorDataset, DataLoader
 from transformers import RobertaTokenizer
 
+from features.grammar import GrammarFeatures
 from features.probabilistic import ProbabilisticFeatures, fixed_len
+from features.word_frequency import WordFrequency
 from models.bilstm import BiLSTM
 from models.hybrid import HybridBiLSTMRoBERTa
 from models.training import eval_loop, train_loop
@@ -75,8 +77,8 @@ for i, line in enumerate(open(path)):
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    #if i > 1000:
-    #    break
+    if i > 1000:
+        break
 
 test_text = []
 test_ids = []
@@ -88,8 +90,8 @@ for i, line in enumerate(open(testpath)):
         continue
     test_text.append(sentence)
     test_ids.append(parts[0])
-    #if i > 1000:
-    #    break
+    if i > 1000:
+        break
 
 train_Y = np.array(train_Y)
 dev_Y = np.array(dev_Y)
@@ -101,9 +103,9 @@ device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("
 local_device = torch.device('cpu')
 
 perp = ProbabilisticFeatures(device, local_device, language, disable_sequence)
-# gram = GrammarFeatures(device, local_device, language)
-# freq = WordFrequency(device, local_device, language)
-feature_generators = [perp]
+gram = GrammarFeatures(device, local_device, language)
+freq = WordFrequency(device, local_device, language)
+feature_generators = [gram, freq]
 
 # print("Generating text derivations...")
 # text_derivator = TextDerivator(language, device, path.parent / 'train-derived.tsv')
