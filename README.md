@@ -15,4 +15,4 @@ Please, create a folder in the root of the repository named `resources/` with tw
 This feature requires pre-computed grammar check, all the data can be downloaded from:
 - both subtasks and train+test and en+es are in: https://drive.google.com/file/d/1-JM_k18UukKqp6-rMO15qpc_MG8yu4BG/view?usp=share_link
 
-Please, store the tsv.gz file in `resources/`
+Please, store the tsv.gz file in `resources/`  the feature class `grammar.py` will read the file from the folder and it will creatre a dict.
