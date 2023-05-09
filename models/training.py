@@ -42,14 +42,18 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
     correct = 0
     size = 0
     preds = []
+    probs = []
     true_Y = []
     with torch.no_grad():
         for XY in dataloader:
             XY = [xy.to(device) for xy in XY]
             Xs = XY[:-1]
             Y = XY[-1].to(local_device)
-            pred = model.postprocessing(model(*Xs))
+            output = model(*Xs)
+            pred = model.postprocessing(output, argmax = True)
             preds.append(pred)
+            prob = np.exp(model.postprocessing(output, argmax=False))
+            probs.append(prob)
             Y = Y.numpy()
             true_Y.append(Y)
             eq = np.equal(Y, pred)
@@ -57,6 +61,7 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
             correct += sum(eq)
             progress_bar.update(1)
     preds = np.concatenate(preds)
+    probs = np.concatenate(probs)
     true_Y = np.concatenate(true_Y)
     if not test:
         print('Accuracy: ' + str(correct / size))
@@ -64,4 +69,4 @@ def eval_loop(dataloader, model, device, local_device, skip_visual=False, test=F
         print('F1 score: ' + str(f1))
         return f1
     else:
-        return preds
+        return preds, probs

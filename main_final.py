@@ -1,18 +1,22 @@
-import numpy as np
 import pathlib
 import random
 import sys
+
+import numpy as np
 import torch
 from torch.optim import Adam
 from torch.optim.lr_scheduler import MultiStepLR
 from torch.utils.data import TensorDataset, DataLoader
 from transformers import RobertaTokenizer
+
 from features.probabilistic import ProbabilisticFeatures, fixed_len
 from models.bilstm import BiLSTM
 from models.hybrid import HybridBiLSTMRoBERTa
 from models.training import eval_loop, train_loop
 
 random.seed(10)
+torch.manual_seed(10)
+np.random.seed(0)
 
 language = 'en'
 task = 'subtask_1'
@@ -20,8 +24,8 @@ if len(sys.argv) == 3:
     language = sys.argv[1]
     task = sys.argv[2]
 
-# model_type = 'BiLSTM'
-model_type = 'Hybrid'
+model_type = 'BiLSTM'
+# model_type = 'Hybrid'
 disable_sequence = False
 
 if language == 'en':
@@ -176,7 +180,7 @@ for epoch in range(20):
             model.unfreeze_llm()
     train_f1 = train_loop(train_loader, model, optimizer, scheduler, device, local_device, skip_visual)
     dev_f1 = eval_loop(dev_loader, model, device, local_device, skip_visual, test=False)
-    test_preds = eval_loop(test_loader, model, device, local_device, skip_visual, test=True)
+    test_preds, test_probs = eval_loop(test_loader, model, device, local_device, skip_visual, test=True)
     stats_file.write(str(epoch + 1) + '\t' + str(train_f1) + '\t' + str(dev_f1) + '\n')
     with open(pathlib.Path.home() / 'data' / 'autext' / 'out' / (
             task + '_' + language + '_preds_' + str(epoch + 1) + '.tsv'), 'w') as f:
@@ -184,6 +188,12 @@ for epoch in range(20):
         for test_id, pred in zip(test_ids, test_preds):
             label = ['human', 'generated'][pred] if task == 'subtask_1' else ['A', 'B', 'C', 'D', 'E', 'F'][pred]
             f.write(test_id + '\t' + label + '\n')
+    with open(pathlib.Path.home() / 'data' / 'autext' / 'out' / (
+            task + '_' + language + '_probs_' + str(epoch + 1) + '.tsv'), 'w') as f:
+        f.write('id\t' + '\t'.join(
+            ['human', 'generated'] if task == 'subtask_1' else ['A', 'B', 'C', 'D', 'E', 'F']) + '\n')
+        for test_id, prob in zip(test_ids, test_probs):
+            f.write(test_id + '\t' + '\t'.join([str(x) for x in prob]) + '\n')
 
 stats_file.close()
 print("The end!")

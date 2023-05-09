@@ -34,9 +34,12 @@ class HybridBiLSTMRoBERTa(Module):
     def compute_loss(self, pred, true):
         output = self.loss_fn(pred, true)
         return output
-    
-    def postprocessing(self, Y):
-        decisions = Y.argmax(1).to(self.local_device).numpy()
+
+    def postprocessing(self, Y, argmax=True):
+        if argmax:
+            decisions = Y.argmax(1).to(self.local_device).numpy()
+        else:
+            decisions = Y.to(self.local_device).numpy()
         return decisions
 
     def freeze_llm(self):
