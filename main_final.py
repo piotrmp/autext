@@ -44,8 +44,10 @@ for line in open(pathlib.Path.home() / 'data' / 'autext' / 'data' / task / langu
 
 train_text = []
 train_Y = []
+train_ids = []
 dev_text = []
 dev_Y = []
+dev_ids = []
 path = pathlib.Path.home() / 'data' / 'autext' / 'data' / task / language / 'train.tsv'
 for i, line in enumerate(open(path)):
     parts = line.strip().split('\t')
@@ -74,11 +76,13 @@ for i, line in enumerate(open(path)):
     if traindev_folds[parts[0]] == '0':
         dev_text.append(sentence)
         dev_Y.append(Y)
+        dev_ids.append(parts[0])
     else:
         train_text.append(sentence)
         train_Y.append(Y)
-    if i > 1000:
-        break
+        train_ids.append(parts[0])
+    #if i > 1000:
+    #    break
 
 test_text = []
 test_ids = []
@@ -90,8 +94,8 @@ for i, line in enumerate(open(testpath)):
         continue
     test_text.append(sentence)
     test_ids.append(parts[0])
-    if i > 1000:
-        break
+    #if i > 1000:
+    #    break
 
 train_Y = np.array(train_Y)
 dev_Y = np.array(dev_Y)
@@ -183,18 +187,30 @@ for epoch in range(20):
     train_f1 = train_loop(train_loader, model, optimizer, scheduler, device, local_device, skip_visual)
     dev_f1 = eval_loop(dev_loader, model, device, local_device, skip_visual, test=False)
     test_preds, test_probs = eval_loop(test_loader, model, device, local_device, skip_visual, test=True)
+    
     stats_file.write(str(epoch + 1) + '\t' + str(train_f1) + '\t' + str(dev_f1) + '\n')
+    
     with open(pathlib.Path.home() / 'data' / 'autext' / 'out' / (
             task + '_' + language + '_preds_' + str(epoch + 1) + '.tsv'), 'w') as f:
         f.write('id\tlabel\n')
         for test_id, pred in zip(test_ids, test_preds):
             label = ['human', 'generated'][pred] if task == 'subtask_1' else ['A', 'B', 'C', 'D', 'E', 'F'][pred]
             f.write(test_id + '\t' + label + '\n')
+    
     with open(pathlib.Path.home() / 'data' / 'autext' / 'out' / (
-            task + '_' + language + '_probs_' + str(epoch + 1) + '.tsv'), 'w') as f:
+            task + '_' + language + '_probs_test_' + str(epoch + 1) + '.tsv'), 'w') as f:
         f.write('id\t' + '\t'.join(
             ['human', 'generated'] if task == 'subtask_1' else ['A', 'B', 'C', 'D', 'E', 'F']) + '\n')
         for test_id, prob in zip(test_ids, test_probs):
+            f.write(test_id + '\t' + '\t'.join([str(x) for x in prob]) + '\n')
+    
+    _, dev_probs = eval_loop(dev_loader, model, device, local_device, skip_visual, test=True)
+    _, train_probs = eval_loop(train_loader, model, device, local_device, skip_visual, test=True)
+    with open(pathlib.Path.home() / 'data' / 'autext' / 'out' / (
+            task + '_' + language + '_probs_traindev_' + str(epoch + 1) + '.tsv'), 'w') as f:
+        f.write('id\t' + '\t'.join(
+            ['human', 'generated'] if task == 'subtask_1' else ['A', 'B', 'C', 'D', 'E', 'F']) + '\n')
+        for test_id, prob in zip(train_ids + dev_ids, [x for x in train_probs] + [x for x in dev_probs]):
             f.write(test_id + '\t' + '\t'.join([str(x) for x in prob]) + '\n')
 
 stats_file.close()
