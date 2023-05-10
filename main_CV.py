@@ -148,7 +148,7 @@ for fold in np.unique(all_folds):
     milestones = [5] if model_type == 'Hybrid' else []
     scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.02)
     skip_visual = False
-    pred = eval_loop(test_loader, model, device, local_device, skip_visual)
+    eval_loop(test_loader, model, device, local_device, skip_visual)
     for epoch in range(10):
         print("EPOCH " + str(epoch + 1))
         if model_type == 'Hybrid':
@@ -157,7 +157,7 @@ for fold in np.unique(all_folds):
             else:
                 model.unfreeze_llm()
         train_loop(train_loader, model, optimizer, scheduler, device, local_device, skip_visual)
-        pred = eval_loop(test_loader, model, device, local_device, skip_visual)
+        pred, _ = eval_loop(test_loader, model, device, local_device, skip_visual, test=True)
     result[all_folds == fold] = pred
     partial_f1s.append(f1_score(y_true=all_Y[all_folds == fold], y_pred=pred, average="macro"))
 
