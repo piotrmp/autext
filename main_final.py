@@ -107,9 +107,9 @@ device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("
 local_device = torch.device('cpu')
 
 perp = ProbabilisticFeatures(device, local_device, language, disable_sequence)
-gram = GrammarFeatures(device, local_device, language)
-freq = WordFrequency(device, local_device, language)
-feature_generators = [gram, freq]
+#gram = GrammarFeatures(device, local_device, language)
+#freq = WordFrequency(device, local_device, language)
+feature_generators = [perp]
 
 # print("Generating text derivations...")
 # text_derivator = TextDerivator(language, device, path.parent / 'train-derived.tsv')
