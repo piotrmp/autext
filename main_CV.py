@@ -11,10 +11,10 @@ from transformers import RobertaTokenizer
 
 from features.grammar import GrammarFeatures
 from features.probabilistic import ProbabilisticFeatures, fixed_len
-from features.text_derivator import TextDerivator
 from features.word_frequency import WordFrequency
 from models.bilstm import BiLSTM
 from models.hybrid import HybridBiLSTMRoBERTa
+from models.mutant import MutantRoBERTa
 from models.training import eval_loop, train_loop
 
 random.seed(10)
@@ -26,7 +26,8 @@ if len(sys.argv) == 3:
     task = sys.argv[2]
 
 # model_type = 'BiLSTM'
-model_type = 'Hybrid'
+#model_type = 'Hybrid'
+model_type = 'Mutant'
 disable_sequence = False
 
 if language == 'en':
@@ -69,8 +70,8 @@ for i, (line, line_CV) in enumerate(zip(open(path), open(path_CV))):
     all_text.append(sentence)
     all_Y.append(Y)
     all_folds.append(int(line_CV.strip().split('\t')[1]))
-    #if i > 1000:
-    #    break
+    if i > 10000:
+        break
 
 all_Y = np.array(all_Y)
 all_folds = np.array(all_folds)
@@ -82,9 +83,9 @@ device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("
 local_device = torch.device('cpu')
 
 perp = ProbabilisticFeatures(device, local_device, language, disable_sequence)
-gram = GrammarFeatures(device, local_device, language)
-freq = WordFrequency(device, local_device, language)
-feature_generators = [gram, freq, perp]
+#gram = GrammarFeatures(device, local_device, language)
+#freq = WordFrequency(device, local_device, language)
+feature_generators = [perp]
 
 #print("Generating text derivations...")
 #text_derivator = TextDerivator(language, device, path.parent / 'train-derived.tsv')
@@ -141,9 +142,11 @@ for fold in np.unique(all_folds):
         model = BiLSTM(all_X.shape[2], task, local_device).to(device)
     elif model_type == 'Hybrid':
         model = HybridBiLSTMRoBERTa(all_X.shape[2], task, local_device, roberta_variant, disable_sequence).to(device)
+    elif model_type == 'Mutant':
+        model = MutantRoBERTa(task, local_device, roberta_variant).to(device)
     print("Preparing training")
     model = model.to(device)
-    learning_rate = 1e-3
+    learning_rate = 2e-05 if model_type=='Mutant' else 1e-3
     optimizer = Adam(model.parameters(), lr=learning_rate)
     milestones = [5] if model_type == 'Hybrid' else []
     scheduler = MultiStepLR(optimizer, milestones=milestones, gamma=0.02)
