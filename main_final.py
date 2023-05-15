@@ -29,6 +29,7 @@ if len(sys.argv) == 3:
 model_type = 'BiLSTM'
 # model_type = 'Hybrid'
 disable_sequence = False
+shuffle_traindev = False
 
 if language == 'en':
     roberta_variant = "roberta-base"
@@ -156,8 +157,8 @@ dev_dataset = TensorDataset(torch.tensor(dev_X).float(), dev_input_ids, dev_atte
                             torch.tensor(np.array(dev_Y)).long())
 test_dataset = TensorDataset(torch.tensor(test_X).float(), test_input_ids, test_attention_mask,
                              torch.tensor(np.zeros(len(test_text))).long())
-train_loader = DataLoader(train_dataset, shuffle=True, batch_size=BATCH_SIZE)
-dev_loader = DataLoader(dev_dataset, shuffle=True, batch_size=BATCH_SIZE)
+train_loader = DataLoader(train_dataset, shuffle=shuffle_traindev, batch_size=BATCH_SIZE)
+dev_loader = DataLoader(dev_dataset, shuffle=shuffle_traindev, batch_size=BATCH_SIZE)
 test_loader = DataLoader(test_dataset, shuffle=False, batch_size=BATCH_SIZE)
 
 if model_type == 'BiLSTM':

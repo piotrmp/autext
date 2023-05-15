@@ -25,9 +25,9 @@ if len(sys.argv) == 3:
     language = sys.argv[1]
     task = sys.argv[2]
 
-# model_type = 'BiLSTM'
+model_type = 'BiLSTM'
 #model_type = 'Hybrid'
-model_type = 'Mutant'
+#model_type = 'Mutant'
 disable_sequence = False
 
 if language == 'en':
