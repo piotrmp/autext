@@ -1,6 +1,6 @@
 from sklearn.metrics import f1_score
 
-tested_file = '/Users/piotr/data/autext/out/subtask_1_en_probs_traindev_12.tsv'
+tested_file = '/Users/piotr/data/autext/out-bilstm-probs2/subtask_1_en_probs_traindev_18.tsv'
 pred_labels= {}
 for line in open(tested_file):
     if line.startswith('id'):
