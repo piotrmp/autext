@@ -12,14 +12,12 @@ Please, create a folder in the root of the repository named `resources/` with tw
 
 ## Feature `grammar` dependencies:
 
-This feature requires running [LanguageTool](https://github.com/languagetool-org/languagetool) in local server, port 8010. We use the dockerised version , [Erikvl87/docker-languagetool](https://github.com/Erikvl87/docker-languagetool) to start the grammar check service.
+This feature requires running [LanguageTool](https://github.com/languagetool-org/languagetool) in local server, port 8010. We recommend to use the following dockerised version [Erikvl87/docker-languagetool](https://github.com/Erikvl87/docker-languagetool) to start the grammar check service.
 
-Here the steps to run LanguageTool in local server: 
+These are the steps to run LanguageTool in your local server: 
 ```
 docker pull erikvl87/languagetool
 docker run --rm -p 8010:8010 erikvl87/languagetool
 ```
 
-We use [language-tool-python](https://pypi.org/project/language-tool-python/#description) python wrapper to query the local API.
-
-Please, store the tsv.gz file in `resources/`  the feature class `grammar.py` will read the file from the folder and it will creatre a dict.
+Then, the `autext` functions use [language-tool-python](https://pypi.org/project/language-tool-python/#description) python wrapper to query the local API.
