@@ -1,8 +1,6 @@
-from transformers import GPT2LMHeadModel, GPT2TokenizerFast, AutoTokenizer, AutoModelForCausalLM
-import torch
+from transformers import GPT2TokenizerFast
 import numpy as np
 import pandas as pd
-from nltk.tokenize import word_tokenize
 from collections import defaultdict
 import re
 
@@ -28,8 +26,6 @@ class WordFrequency(FeatureGenerator):
                                               header=0, sep='\t', quotechar='"')
             word_freq_dict = word_freq_matrix_df[word_freq_matrix_df.word.notnull()].set_index('word').freq.to_dict()
             self.word_freq_dict = defaultdict(lambda: 1, word_freq_dict)
-        
-        
         elif language == 'es':
             self.tokenizer = GPT2TokenizerFast.from_pretrained("PlanTL-GOB-ES/gpt2-base-bne")
             self.tokenizer.pad_token = '?'

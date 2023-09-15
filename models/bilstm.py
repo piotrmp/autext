@@ -1,7 +1,5 @@
-from tqdm.auto import tqdm
-from torch.nn import Module, Embedding, LSTM, Linear, LogSoftmax, NLLLoss
+from torch.nn import Module, LSTM, Linear, LogSoftmax, NLLLoss
 import torch
-import numpy as np
 
 class BiLSTM(Module):
     
