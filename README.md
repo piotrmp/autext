@@ -4,7 +4,7 @@ This repository contains the source code for training a model identifying text t
 
 The solution presented here was prepared within [AuTexTification: Automated Text Identification shared task](https://sites.google.com/view/autextification/home), a part of [IberLEF 2023, the 5th Workshop on Iberian Languages Evaluation Forum](http://sepln2023.sepln.org/en/iberlef-en/) at the SEPLN 2023 Conference, held in Jaén, Spain on the 26th of September, 2023. The [results](https://sites.google.com/view/autextification/results?authuser=0) show our solution (*TALN-UPF*) ranked as the 1st in differentiating between human- and machine-generated text, both for Spanish and English.
 
-The full description of our work is available in the article presented at the conference ([I've Seen Things You Machines Wouldn't Believe: Measuring Content Predictability to Identify Automatically-Generated Text](TODO)). The source code is configured to reproduce the best-performing *Pred+FLM+Add* variant, but can be adjusted to test other configurations.
+The full description of our work is available in the article presented at the conference ([I've Seen Things You Machines Wouldn't Believe: Measuring Content Predictability to Identify Automatically-Generated Text]([TODO](https://ceur-ws.org/Vol-3496/autextification-paper7.pdf))). The source code is configured to reproduce the best-performing *Pred+FLM+Add* variant, but can be adjusted to test other configurations.
 
 The research was done within the [ERINIA](https://www.upf.edu/web/erinia) project realised at the
 [TALN lab](https://www.upf.edu/web/taln/) of [Universitat Pompeu Fabra](https://www.upf.edu).
